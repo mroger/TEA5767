@@ -3,6 +3,8 @@
 #ifndef TEA5767N_h
 #define TEA5767N_h
 
+//Note that not all of these constants are being used. They are here for
+//convenience, though.
 #define TEA5767_I2C_ADDRESS						0x60
 #define FIRST_DATA										0
 #define SECOND_DATA										1
@@ -64,6 +66,8 @@ class TEA5767N {
 		void readStatus();
 		float getFrequencyInMHz(unsigned int);
 		void calculateOptimalHiLoInjection(float);
+	  void setHighSideLOInjection();
+	  void setLowSideLOInjection();
 		
 	public:
 	  TEA5767N();
@@ -84,8 +88,6 @@ class TEA5767N {
 	  void setMonoReception();
 	  void setSoftMuteOn();
 	  void setSoftMuteOff();
-	  void setHighSideLOInjection();
-	  void setLowSideLOInjection();
 	  
 	  void setStandByOn();
 	  void setStandByOff();

@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <TEA5767N.h>
-#include <Serial.h>
 
 TEA5767N::TEA5767N() {
 	Wire.begin();
@@ -83,6 +82,7 @@ void TEA5767N::mute() {
 	transmission_data[FIRST_DATA] |= 0b10000000;
 	transmitData();
 }
+
 void TEA5767N::turnTheSoundBackOn() {
 	transmission_data[FIRST_DATA] &= 0b01111111;
 	transmitData();
