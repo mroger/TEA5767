@@ -8,10 +8,10 @@ TEA5767N::TEA5767N() {
 }
 
 void TEA5767N::initializeTransmissionData() {
-	transmission_data[FIRST_DATA] = 0;						//MUTE: 0 - not muted
-																								//SEARCH MODE: 0 - not in search mode
+	transmission_data[FIRST_DATA] = 0;            //MUTE: 0 - not muted
+                                                //SEARCH MODE: 0 - not in search mode
 	
-	transmission_data[SECOND_DATA] = 0;						//No frequency defined yet
+	transmission_data[SECOND_DATA] = 0;           //No frequency defined yet
 	
 	transmission_data[THIRD_DATA] = 0xB0;					//10110000
 																								//SUD: 1 - search up
