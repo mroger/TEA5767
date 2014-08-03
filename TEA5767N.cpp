@@ -156,6 +156,8 @@ void TEA5767N::setLowSideLOInjection() {
 void TEA5767N::searchNext() {
 	transmission_data[FIRST_DATA] |= 0b01000000;
 	transmitData();
+	//Turns de search off
+	transmission_data[FIRST_DATA] &= 0b10111111;
 }
 
 void TEA5767N::searchFromBeginning() {
