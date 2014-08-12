@@ -3,17 +3,17 @@
 #include <TEA5767N.h>
 
 TEA5767N::TEA5767N() {
-	Wire.begin();
-	initializeTransmissionData();
+  Wire.begin();
+  initializeTransmissionData();
 }
 
 void TEA5767N::initializeTransmissionData() {
-	transmission_data[FIRST_DATA] = 0;            //MUTE: 0 - not muted
+  transmission_data[FIRST_DATA] = 0;            //MUTE: 0 - not muted
                                                 //SEARCH MODE: 0 - not in search mode
 	
-	transmission_data[SECOND_DATA] = 0;           //No frequency defined yet
+  transmission_data[SECOND_DATA] = 0;           //No frequency defined yet
 	
-	transmission_data[THIRD_DATA] = 0xB0;         //10110000
+  transmission_data[THIRD_DATA] = 0xB0;         //10110000
                                                 //SUD: 1 - search up
                                                 //SSL[1:0]: 01 - low; level ADC output = 5
                                                 //HLSI: 1 - high side LO injection
@@ -22,7 +22,7 @@ void TEA5767N::initializeTransmissionData() {
                                                 //ML: 0 - left audio channel is not muted
                                                 //SWP1: 0 - port 1 is LOW
 	
-	transmission_data[FOURTH_DATA] = 0x10;        //00010000
+  transmission_data[FOURTH_DATA] = 0x10;        //00010000
                                                 //SWP2: 0 - port 2 is LOW
                                                 //STBY: 0 - not in Standby mode
                                                 //BL: 0 - US/Europe FM band
@@ -32,7 +32,7 @@ void TEA5767N::initializeTransmissionData() {
                                                 //SNC: 0 - stereo noise cancelling is OFF
                                                 //SI: 0 - pin SWPORT1 is software programmable port 1
 	
-	transmission_data[FIFTH_DATA] = 0x00;         //PLLREF: 0 - the 6.5 MHz reference frequency for the PLL is disabled
+  transmission_data[FIFTH_DATA] = 0x00;         //PLLREF: 0 - the 6.5 MHz reference frequency for the PLL is disabled
                                                 //DTC: 0 - the de-emphasis time constant is 50 ms
 }
 
