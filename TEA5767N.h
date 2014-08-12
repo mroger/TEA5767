@@ -5,12 +5,12 @@
 
 //Note that not all of these constants are being used. They are here for
 //convenience, though.
-#define TEA5767_I2C_ADDRESS						0x60
-#define FIRST_DATA										0
-#define SECOND_DATA										1
-#define THIRD_DATA										2
-#define FOURTH_DATA										3
-#define FIFTH_DATA										4
+#define TEA5767_I2C_ADDRESS           0x60
+#define FIRST_DATA                    0
+#define SECOND_DATA                   1
+#define THIRD_DATA                    2
+#define FOURTH_DATA                   3
+#define FIFTH_DATA                    4
 
 #define LOW_STOP_LEVEL								1
 #define MID_STOP_LEVEL								2
