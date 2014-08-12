@@ -12,43 +12,43 @@
 #define FOURTH_DATA                   3
 #define FIFTH_DATA                    4
 
-#define LOW_STOP_LEVEL								1
-#define MID_STOP_LEVEL								2
-#define HIGH_STOP_LEVEL								3
+#define LOW_STOP_LEVEL                1
+#define MID_STOP_LEVEL                2
+#define HIGH_STOP_LEVEL               3
 
-#define HIGH_SIDE_INJECTION						1
-#define LOW_SIDE_INJECTION						0
+#define HIGH_SIDE_INJECTION           1
+#define LOW_SIDE_INJECTION            0
 
-#define STEREO_ON											0
-#define STEREO_OFF										1
+#define STEREO_ON                     0
+#define STEREO_OFF                    1
 
-#define MUTE_RIGHT_ON									1
-#define MUTE_RIGHT_OFF								0
-#define MUTE_LEFT_ON									1
-#define MUTE_LEFT_OFF									0
+#define MUTE_RIGHT_ON                 1
+#define MUTE_RIGHT_OFF                0
+#define MUTE_LEFT_ON                  1
+#define MUTE_LEFT_OFF                 0
 
-#define SWP1_HIGH											1
-#define SWP1_LOW											0
-#define SWP2_HIGH											1
-#define SWP2_LOW											0
+#define SWP1_HIGH                     1
+#define SWP1_LOW                      0
+#define SWP2_HIGH                     1
+#define SWP2_LOW                      0
 
-#define STBY_ON												1
-#define STBY_OFF											0
+#define STBY_ON                       1
+#define STBY_OFF                      0
 
-#define JAPANESE_FM_BAND							1
-#define US_EUROPE_FM_BAND							0
+#define JAPANESE_FM_BAND              1
+#define US_EUROPE_FM_BAND             0
 
-#define SOFT_MUTE_ON									1
-#define SOFT_MUTE_OFF									0
+#define SOFT_MUTE_ON                  1
+#define SOFT_MUTE_OFF                 0
 
-#define HIGH_CUT_CONTROL_ON						1
-#define HIGH_CUT_CONTROL_OFF					0
+#define HIGH_CUT_CONTROL_ON           1
+#define HIGH_CUT_CONTROL_OFF          0
 
-#define STEREO_NOISE_CANCELLING_ON		1
-#define STEREO_NOISE_CANCELLING_OFF		0
+#define STEREO_NOISE_CANCELLING_ON    1
+#define STEREO_NOISE_CANCELLING_OFF   0
 
-#define SEARCH_INDICATOR_ON						1
-#define SEARCH_INDICATOR_OFF					0
+#define SEARCH_INDICATOR_ON           1
+#define SEARCH_INDICATOR_OFF          0
 
 class TEA5767N {
 	private:
