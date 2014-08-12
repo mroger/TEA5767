@@ -52,20 +52,20 @@
 
 class TEA5767N {
 	private:
-		float frequency;
-		byte hiInjection;
-		byte frequencyH;
-		byte frequencyL;
-		byte transmission_data[5];
-		byte reception_data[5];
+	  float frequency;
+	  byte hiInjection;
+	  byte frequencyH;
+	  byte frequencyL;
+	  byte transmission_data[5];
+	  byte reception_data[5];
 		
-		void setFrequency(float);
-		void transmitFrequency(float);
-		void transmitData();
-		void initializeTransmissionData();
-		void readStatus();
-		float getFrequencyInMHz(unsigned int);
-		void calculateOptimalHiLoInjection(float);
+	  void setFrequency(float);
+	  void transmitFrequency(float);
+	  void transmitData();
+	  void initializeTransmissionData();
+	  void readStatus();
+	  float getFrequencyInMHz(unsigned int);
+	  void calculateOptimalHiLoInjection(float);
 	  void setHighSideLOInjection();
 	  void setLowSideLOInjection();
 		
