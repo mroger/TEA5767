@@ -6,6 +6,7 @@
 //Note that not all of these constants are being used. They are here for
 //convenience, though.
 #define TEA5767_I2C_ADDRESS           0x60
+
 #define FIRST_DATA                    0
 #define SECOND_DATA                   1
 #define THIRD_DATA                    2
@@ -68,6 +69,11 @@ class TEA5767N {
 	  void calculateOptimalHiLoInjection(float);
 	  void setHighSideLOInjection();
 	  void setLowSideLOInjection();
+	  void setSoundOn();
+	  void setSoundOff();
+	  void loadFrequency();
+	  byte isReady();
+	  byte isBandLimitReached();
 		
 	public:
 	  TEA5767N();
@@ -96,13 +102,17 @@ class TEA5767N {
 	  void setStereoNoiseCancellingOn();
 	  void setStereoNoiseCancellingOff();
 	  
-	  void searchNext();
-	  void searchFromBeginning();
-	  void searchFromEnd();
+	  byte searchNext();
+	  byte searchNextMuting();
+	  byte startsSearchFrom(float frequency);
+	  byte startsSearchFromBeginning();
+	  byte startsSearchFromEnd();
+	  byte startsSearchMutingFromBeginning();
+	  byte startsSearchMutingFromEnd();
 	  byte getSignalLevel();
 	  byte isStereo();
-	  byte isReady();
-	  byte isBandLimitReached();
+	  byte isSearchUp();
+	  byte isSearchDown();
 	  
 };
 
