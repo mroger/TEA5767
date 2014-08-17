@@ -79,13 +79,21 @@ void TEA5767N::transmitData() {
 }
 
 void TEA5767N::mute() {
-	transmission_data[FIRST_DATA] |= 0b10000000;
+	setSoundOff();
 	transmitData();
 }
 
+void TEA5767N::setSoundOff() {
+	transmission_data[FIRST_DATA] |= 0b10000000;
+}
+
 void TEA5767N::turnTheSoundBackOn() {
-	transmission_data[FIRST_DATA] &= 0b01111111;
+	setSoundOn();
 	transmitData();
+}
+
+void TEA5767N::setSoundOn() {
+	transmission_data[FIRST_DATA] &= 0b01111111;
 }
 
 void TEA5767N::transmitFrequency(float frequency) {
@@ -106,12 +114,23 @@ void TEA5767N::readStatus() {
 			reception_data[i] = Wire.read();
 		}
 	}
+	delay(100);
 }
 
 float TEA5767N::readFrequencyInMHz() {
-	readStatus();
+	loadFrequency();
+	
 	unsigned int frequencyW = (((reception_data[FIRST_DATA] & 0x3F) * 256) + reception_data[SECOND_DATA]);
 	return getFrequencyInMHz(frequencyW);
+}
+
+void TEA5767N::loadFrequency() {
+	readStatus();
+	
+	//Stores the read frequency that can be the result of a search and it´s not yet in transmission data
+	//and is necessary to subsequent calls to search.
+	transmission_data[FIRST_DATA] = (transmission_data[FIRST_DATA] & 0xC0) | (reception_data[FIRST_DATA] & 0x3F);
+	transmission_data[SECOND_DATA] = reception_data[SECOND_DATA];
 }
 
 float TEA5767N::getFrequencyInMHz(unsigned int frequencyW) {
@@ -153,23 +172,75 @@ void TEA5767N::setLowSideLOInjection() {
 	transmission_data[THIRD_DATA] &= 0b11101111;
 }
 
-void TEA5767N::searchNext() {
+byte TEA5767N::searchNextMuting() {
+	byte bandLimitReached;
+	
+	mute();
+	bandLimitReached = searchNext();
+	turnTheSoundBackOn();
+	
+	return bandLimitReached;
+}
+
+byte TEA5767N::searchNext() {
+	byte bandLimitReached;
+	
+	if (isSearchUp()) {
+		selectFrequency(readFrequencyInMHz() + 0.1);
+	} else {
+		selectFrequency(readFrequencyInMHz() - 0.1);
+	}
+	
+	//Turns the search on
 	transmission_data[FIRST_DATA] |= 0b01000000;
 	transmitData();
+		
+	while(!isReady()) { }
+	//Read Band Limit flag
+	bandLimitReached = isBandLimitReached();
+	//Loads the new selected frequency
+	loadFrequency();
+	
 	//Turns de search off
 	transmission_data[FIRST_DATA] &= 0b10111111;
+	transmitData();
+	
+	return bandLimitReached;
 }
 
-void TEA5767N::searchFromBeginning() {
-	selectFrequency(87.5);
+byte TEA5767N::startsSearchMutingFromBeginning() {
+	byte bandLimitReached;
+	
+	mute();
+	bandLimitReached = startsSearchFromBeginning();
+	turnTheSoundBackOn();
+	
+	return bandLimitReached;
+}
+
+byte TEA5767N::startsSearchMutingFromEnd() {
+	byte bandLimitReached;
+	
+	mute();
+	bandLimitReached = startsSearchFromEnd();
+	turnTheSoundBackOn();
+	
+	return bandLimitReached;
+}
+
+byte TEA5767N::startsSearchFromBeginning() {
 	setSearchUp();
-	searchNext();
+	return startsSearchFrom(87.0);
 }
 
-void TEA5767N::searchFromEnd() {
-	selectFrequency(108);
+byte TEA5767N::startsSearchFromEnd() {
 	setSearchDown();
-	searchNext();
+	return startsSearchFrom(108.0);
+}
+
+byte TEA5767N::startsSearchFrom(float frequency) {
+	selectFrequency(frequency);
+	return searchNext();
 }
 
 byte TEA5767N::getSignalLevel() {
@@ -190,6 +261,14 @@ byte TEA5767N::isReady() {
 byte TEA5767N::isBandLimitReached() {
 	readStatus();
 	return (reception_data[FIRST_DATA] >> 6) & 1;
+}
+
+byte TEA5767N::isSearchUp() {
+	return (transmission_data[THIRD_DATA] & 0b10000000) != 0;
+}
+
+byte TEA5767N::isSearchDown() {
+	return (transmission_data[THIRD_DATA] & 0b10000000) == 0;
 }
 
 void TEA5767N::setStereoReception() {
