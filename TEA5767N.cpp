@@ -244,6 +244,9 @@ byte TEA5767N::startsSearchFrom(float frequency) {
 }
 
 byte TEA5767N::getSignalLevel() {
+	//Necessary before read status
+	transmitData();
+	//Read updated status
 	readStatus();
 	return reception_data[FOURTH_DATA] >> 4;
 }
