@@ -1,0 +1,1 @@
+copy TEA5767N.* "C:\Documents and Settings\Roger\Meus documentos\Arduino\libraries\TEA5767N\"
