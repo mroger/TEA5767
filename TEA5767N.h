@@ -78,6 +78,7 @@ class TEA5767N {
 	public:
 	  TEA5767N();
 	  void selectFrequency(float);
+	  void selectFrequencyMuting(float);
 	  void mute();
 	  void turnTheSoundBackOn();
 	  void muteLeft();

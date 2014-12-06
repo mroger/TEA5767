@@ -106,6 +106,13 @@ void TEA5767N::selectFrequency(float frequency) {
 	transmitFrequency(frequency);
 }
 
+void TEA5767N::selectFrequencyMuting(float frequency) {
+	mute();
+	calculateOptimalHiLoInjection(frequency);
+	transmitFrequency(frequency);
+	turnTheSoundBackOn();
+}
+
 void TEA5767N::readStatus() {
 	Wire.requestFrom (TEA5767_I2C_ADDRESS, 5);
 	
