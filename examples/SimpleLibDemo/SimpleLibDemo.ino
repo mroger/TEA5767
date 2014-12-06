@@ -9,7 +9,7 @@ TEA5767N radio = TEA5767N();
 */
 
 void setup() {
-  byte isBandLimitReached;
+  byte isBandLimitReached = 0;
 
   //Sets the radio station
   radio.selectFrequency(89.1);
@@ -38,6 +38,7 @@ void setup() {
   delay(2000);
   //Turns the radio on
   radio.setStandByOff();
+  delay(2000);
   
   Serial.println("Search Up in progress...");
   radio.setSearchMidStopLevel();
