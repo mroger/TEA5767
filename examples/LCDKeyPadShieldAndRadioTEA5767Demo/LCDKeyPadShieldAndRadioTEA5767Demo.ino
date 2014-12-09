@@ -31,20 +31,7 @@ int backLightPin = 10;
 int upDownPin = 11;
 int incPin = 12;
 
-/*
-Station found: 91.3 MHz
-Station found: 98.5 MHz
-Station found: 100.1 MHz
-Station found: 101.7 MHz
-Station found: 102.1 MHz
-Station found: 107.4 MHz
-Station found: 108.0 MHz
-Station found: 95.4 MHz
-Station found: 87.6 MHz
-Station selected: 89.1 MHz
-*/
-
-float default_stations[16] = {87.5, 89.1, 91.3, 96.1, 98.5, 100.1, 100.9, 102.1, 107.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+float default_stations[16] = {88.1, 89.1, 89.7, 91.3, 92.5, 93.7, 94.7, 95.3, 96.1, 98.5, 100.1, 100.9, 101.7, 102.1, 102.9, 103.3};
 float stations[16] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 byte stationIndex = 0;
 
@@ -54,7 +41,8 @@ byte state = 0;       //0 -
                       //3 - 
                       //4 - 
                       //5 - 
-                      //6 - 
+                      //6 -
+                      //7 - 
 byte selectedMenuItem = 0;
 float selectedStation;
 boolean isStandByOn = false;
@@ -63,8 +51,8 @@ boolean mute = false;
 
 char menu[MENU_DEPTH][MENU_LINES][MENU_TEXT] = {
                        {{" Mute"}, {" Search"}, {" Fine search"}, {" Register statn"}, {" Configuration"}, {" Stand by"}, {" Load deflt stn"}, {" Exit"}},
-                       {{" Search level"}, {" Backlit inten."}},
-                       {{" Low"}, {" Medium"}, {" High"}}
+                       {{" Search level"}, {" Backlit inten."}, {"Exit"}},
+                       {{" Low"}, {" Medium"}, {" High"}, {"Exit"}}
                       };
 
 byte searchLevel;
@@ -197,12 +185,11 @@ void printSelectedFrequency(float frequency, byte col, byte row) {
 
 void printMuteStatus() {
   lcd.setCursor(12, 0);
-  lcd.print("M");  
-}
-
-void printNotMuteStatus() {
-  lcd.setCursor(12, 0);
-  lcd.print(" ");  
+  if (mute) {
+    lcd.print("M");
+  } else {
+    lcd.print(" ");
+  }
 }
 
 void printStereoStatus() {
@@ -274,12 +261,19 @@ void loop(){
         wasReleased = false;
         switch (state) {
           case 0: {
-            if ((stationIndex < 16) && (stations[stationIndex+1] != 0.0)) {
+            Serial.println(stationIndex);
+            Serial.println(stations[stationIndex]);
+            Serial.println(stations[stationIndex+1]);
+            if ((stationIndex < 15) && (stations[stationIndex+1] != 0.0)) {
               stationIndex++;
             } else {
               stationIndex = 0;
             }
+            Serial.println(stationIndex);
+            Serial.println(stations[stationIndex]);
+            radio.mute();
             radio.selectFrequency(stations[stationIndex]);
+            radio.turnTheSoundBackOn();
             printSelectedFrequency(radio.readFrequencyInMHz());
             saveStation(stations[stationIndex]);
             break;
@@ -313,12 +307,19 @@ void loop(){
         wasReleased = false;
         switch (state) {
           case 0: {
+            Serial.println(stationIndex);
             if (stationIndex > 0) {
               stationIndex--;
             } else {
-              stationIndex = 6;
+              stationIndex = 15;
+              while((stations[stationIndex] == 0.0) && (stationIndex > 0)) {
+                stationIndex--;
+              }
             }
+            Serial.println(stationIndex);
+            radio.mute();
             radio.selectFrequency(stations[stationIndex]);
+            radio.turnTheSoundBackOn();
             printSelectedFrequency(radio.readFrequencyInMHz());
             saveStation(stations[stationIndex]);
             break;
@@ -465,6 +466,7 @@ void loop(){
           //Execute first level menu selection
           case 1: {
             switch(selectedMenuItem) {
+              //Mute function
               case 0: {
                 state = 0;
                 if (!mute) {
@@ -485,6 +487,7 @@ void loop(){
                 printSelectedFrequency(radio.readFrequencyInMHz());
                 break; 
               }
+              //Search
               case 1: {
                 state = 5;
                 lcd.clear();
@@ -495,6 +498,7 @@ void loop(){
                 printSelectedFrequency(radio.readFrequencyInMHz(), 2, 0);
                 break; 
               }
+              //Fine search
               case 2: {
                 state = 6;
                 lcd.clear();
@@ -506,6 +510,7 @@ void loop(){
                 printSelectedFrequency(selectedStation, 2, 0);
                 break; 
               }
+              //Register station
               case 3: {
                 byte isBandLimitReached = 0;
                 byte progress = 0;
@@ -535,11 +540,14 @@ void loop(){
                 
                 break;
               }
+              //Configuration
               case 4: {
                 state = 3;
                 lcd.clear();
                 lcd.setCursor(0,0);
                 lcd.print(menu[1][0]);
+                lcd.setCursor(0,1);
+                lcd.print(menu[1][1]);
                 markSelectedMenuItem(">", " ");
                 selectedMenuItem = 0;
                 break;
@@ -556,6 +564,7 @@ void loop(){
                 isStandByOn = true;
                 break; 
               }
+              //Load default station
               case 6: {
                 state = 0;
                 
@@ -564,10 +573,18 @@ void loop(){
                 lcd.setCursor(0,1);
                 lcd.print("                 ");
                 
-                // Starts station
+                loadDefaultStations();
+                stationIndex = 0;
+                
+                radio.mute();
+                radio.selectFrequency(stations[stationIndex]);
+                radio.turnTheSoundBackOn();
+                
                 printSelectedFrequency(radio.readFrequencyInMHz());
+                saveStation(stations[stationIndex]);
                 break;
               }
+              //Exit
               case 7: {
                 state = 0;
                 
