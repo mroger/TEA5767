@@ -51,11 +51,12 @@ boolean mute = false;
 
 char menu[MENU_DEPTH][MENU_LINES][MENU_TEXT] = {
                        {{" Mute"}, {" Search"}, {" Fine search"}, {" Register statn"}, {" Configuration"}, {" Stand by"}, {" Load deflt stn"}, {" Exit"}},
-                       {{" Search level"}, {" Backlit inten."}, {"Exit"}},
+                       {{" Search level"}, {" Backlit inten."}, {" Exit"}},
                        {{" Low"}, {" Medium"}, {" High"}, {"Exit"}}
                       };
 
 byte searchLevel;
+byte backlightIntensity;
 
 void loadDefaultStations() {
   for (int i=0 ; i < 16 ; i++) {
@@ -75,6 +76,15 @@ int read_LCD_buttons(){
   return btnNONE;
 }
 
+byte findSelectedStationIndex(float station) {
+  for (int i = 0 ; i < 16 ; i++) {
+    if (stations[i] == station) {
+      return i;
+    }
+  }
+  return 0;
+}
+
 void loadStation() {
   byte intStation, floatStation;
   float station;
@@ -82,12 +92,16 @@ void loadStation() {
   intStation = EEPROM.read(0);
   floatStation = EEPROM.read(1);
   
+  radio.mute();
   if (intStation != 0xFF) {
     station = (intStation * 1.0) +  (floatStation * .1);
     radio.selectFrequency(station);
+    printSelectedFrequency(radio.readFrequencyInMHz());
+    stationIndex = findSelectedStationIndex(station);
   } else {
     radio.selectFrequency(stations[stationIndex]);
   }
+  radio.turnTheSoundBackOn();
 }
 
 void loadSearchLevel() {
@@ -111,10 +125,16 @@ void loadSearchLevel() {
   }
 }
 
+void loadBacklightIntensity() {
+  backlightIntensity = EEPROM.read(3);
+  analogWrite(backLightPin, backlightIntensity);
+}
+
 void loadConfiguration() {
-  //loadStation();
   loadDefaultStations();
+  loadStation();
   loadSearchLevel();
+  loadBacklightIntensity();
 }
 
 void saveStation(float station) {
@@ -157,11 +177,6 @@ void setup(){
   
   // Loads configuration
   loadConfiguration();
-  radio.selectFrequency(stations[0]);
-  //delay(2000);
-  printSelectedFrequency(radio.readFrequencyInMHz());
-  //radio.setSearchMidStopLevel();
-  //radio.selectFrequency(102.1);
   
   //From application_note_tea5767-8.pdf, limit the amount of noise energy.
   radio.setSoftMuteOn();
@@ -242,7 +257,7 @@ void loop(){
     //Necessary to elliminate noise while turning the radio back on
     delay(150);
     radio.turnTheSoundBackOn();
-    analogWrite(backLightPin, 255);
+    analogWrite(backLightPin, backlightIntensity);
     
     lcd.clear();
     lcd.setCursor(0,0);
@@ -291,12 +306,24 @@ void loop(){
             }
             break; 
           }
+          // Increment fine search station
           case 6: {
             if (selectedStation < 108.0) {
               selectedStation += .1;
               radio.selectFrequency(selectedStation);
               printSelectedFrequency(selectedStation, 2, 0);
+              saveStation(selectedStation);
             }
+            break;
+          }
+          // Increment backlight intensity
+          case 7: {
+            if ((backlightIntensity + 10) <= 255) {
+              backlightIntensity += 10;
+              analogWrite(backLightPin, backlightIntensity);
+              EEPROM.write(3, backlightIntensity);
+            }
+            break;
           }
         }
       }
@@ -337,12 +364,24 @@ void loop(){
             }
             break; 
           }
+          // Decrement fine search station
           case 6: {
             if (selectedStation > 88.0) {
               selectedStation -= .1;
               radio.selectFrequency(selectedStation);
               printSelectedFrequency(selectedStation, 2, 0);
+              saveStation(selectedStation);
             }
+            break;
+          }
+          // Decrement backlight intensity
+          case 7: {
+            if ((backlightIntensity - 10) >= 20) {
+              backlightIntensity -= 10;
+              analogWrite(backLightPin, backlightIntensity);
+              EEPROM.write(3, backlightIntensity);
+            }
+            break;
           }
         }
       }
@@ -376,7 +415,23 @@ void loop(){
               }
             }
             markSelectedMenuItem(">", " ");
-            break; 
+            break;
+          }
+          // Selecting on of the two menu items: "Search level", "Backlit inten." or "Exit"
+          case 3: {
+            if (selectedMenuItem > 0) {
+              selectedMenuItem--;
+              
+              if (selectedMenuItem != 3) {
+                lcd.clear();
+                lcd.setCursor(0,0);
+                lcd.print(menu[1][selectedMenuItem]);
+                lcd.setCursor(0,1);
+                lcd.print(menu[1][selectedMenuItem+1]);
+              }
+            }
+            markSelectedMenuItem(">", " ");
+            break;
           }
           case 4: {
             if (selectedMenuItem > 0) {
@@ -425,8 +480,22 @@ void loop(){
               }
             }
             markSelectedMenuItem(" ", ">");
-            break; 
+            break;
           }
+          case 3:
+            if (selectedMenuItem < 2) {
+              selectedMenuItem++;
+              
+              if (selectedMenuItem != 1) {
+                lcd.clear();
+                lcd.setCursor(0,0);
+                lcd.print(menu[1][selectedMenuItem-1]);
+                lcd.setCursor(0,1);
+                lcd.print(menu[1][selectedMenuItem]);
+              }
+            }
+            markSelectedMenuItem(" ", ">");
+            break;
           case 4: {
             if (selectedMenuItem < 2) {
               selectedMenuItem++;
@@ -600,28 +669,58 @@ void loop(){
             }
             break;
           }
+          // One of the 3 itens selected: "Search level", "Backlit intensity" or "Exit"
           case 3: {
-            state = 4;
-            lcd.clear();
-            if (searchLevel < 3) {
-              lcd.setCursor(0,0);
-              lcd.print(menu[2][0]);
-              lcd.setCursor(0,1);
-              lcd.print(menu[2][1]);
-            } else {
-              lcd.setCursor(0,0);
-              lcd.print(menu[2][1]);
-              lcd.setCursor(0,1);
-              lcd.print(menu[2][2]);
+            switch(selectedMenuItem) {
+              // Level item selected
+              case 0: {
+                state = 4;
+                lcd.clear();
+                if (searchLevel < 3) {
+                  lcd.setCursor(0,0);
+                  lcd.print(menu[2][0]);
+                  lcd.setCursor(0,1);
+                  lcd.print(menu[2][1]);
+                } else {
+                  lcd.setCursor(0,0);
+                  lcd.print(menu[2][1]);
+                  lcd.setCursor(0,1);
+                  lcd.print(menu[2][2]);
+                }
+                if (searchLevel == 1) {
+                  markSelectedMenuItem(">", " ");
+                } else {
+                  markSelectedMenuItem(" ", ">");
+                }
+                selectedMenuItem = searchLevel - 1;
+                break;
+              }
+              // Backlight intensity selected
+              case 1: {
+                state = 7;
+            
+                lcd.clear();
+                lcd.setCursor(0,0);
+                lcd.print("Backlight int.");
+                break;
+              }
+              // Exit
+              case 2: {
+                state = 0;
+            
+                lcd.setCursor(0,0);
+                lcd.print("      MHz        ");
+                lcd.setCursor(0,1);
+                lcd.print("                 ");
+                
+                // Starts station
+                printSelectedFrequency(radio.readFrequencyInMHz());
+                break; 
+              }
             }
-            if (searchLevel == 1) {
-              markSelectedMenuItem(">", " ");
-            } else {
-              markSelectedMenuItem(" ", ">");
-            }
-            selectedMenuItem = searchLevel - 1;
             break; 
           }
+          // One of the levels selected
           case 4: {
             state = 0;
             switch(selectedMenuItem+1) {
@@ -651,10 +750,16 @@ void loop(){
             printSelectedFrequency(radio.readFrequencyInMHz());
             break; 
           }
-          case 5: 
-          case 6: {
+          case 5: {
+            
+            break;
+          }
+          // Exit 
+          case 6:
+          case 7: {
             state = 0;
             
+            lcd.clear();
             lcd.setCursor(0,0);
             lcd.print("      MHz        ");
             lcd.setCursor(0,1);
