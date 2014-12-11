@@ -92,7 +92,6 @@ void loadStation() {
   intStation = EEPROM.read(0);
   floatStation = EEPROM.read(1);
   
-  radio.mute();
   if (intStation != 0xFF) {
     station = (intStation * 1.0) +  (floatStation * .1);
     radio.selectFrequency(station);
@@ -101,7 +100,6 @@ void loadStation() {
   } else {
     radio.selectFrequency(stations[stationIndex]);
   }
-  radio.turnTheSoundBackOn();
 }
 
 void loadSearchLevel() {
@@ -130,11 +128,33 @@ void loadBacklightIntensity() {
   analogWrite(backLightPin, backlightIntensity);
 }
 
+void setupVolume() {
+  // Lowest volume
+  digitalWrite(upDownPin, LOW);
+  for (int i = 0 ; i < 100 ; i++) {
+    digitalWrite(incPin, LOW);
+    delay(1);
+    digitalWrite(incPin, HIGH);
+    delay(1);
+  }
+  // Pleasant level
+  digitalWrite(upDownPin, HIGH);
+  for (int i = 0 ; i < 15 ; i++) {
+    digitalWrite(incPin, LOW);
+    delay(1);
+    digitalWrite(incPin, HIGH);
+    delay(1);
+  }
+}
+
 void loadConfiguration() {
+  radio.mute();
   loadDefaultStations();
   loadStation();
   loadSearchLevel();
   loadBacklightIntensity();
+  setupVolume();
+  radio.turnTheSoundBackOn();
 }
 
 void saveStation(float station) {
