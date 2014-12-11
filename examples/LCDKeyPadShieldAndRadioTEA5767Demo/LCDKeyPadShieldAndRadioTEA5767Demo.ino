@@ -315,7 +315,7 @@ void loop(){
           }
           case 5: {
             byte isBandLimitReached;
-            if (selectedMenuItem == 0) {
+            if (selectedMenuItem == 1) {
               radio.setSearchUp();
               isBandLimitReached = radio.searchNextMuting();
               if (isBandLimitReached) {
@@ -373,7 +373,7 @@ void loop(){
           }
           case 5: {
             byte isBandLimitReached;
-            if (selectedMenuItem == 0) {
+            if (selectedMenuItem == 1) {
               radio.setSearchDown();
               isBandLimitReached = radio.searchNextMuting();
               if (isBandLimitReached) {
@@ -771,8 +771,16 @@ void loop(){
             break; 
           }
           case 5: {
+            state = 0;
             
-            break;
+            lcd.setCursor(0,0);
+            lcd.print("      MHz        ");
+            lcd.setCursor(0,1);
+            lcd.print("                 ");
+            
+            // Starts station
+            printSelectedFrequency(radio.readFrequencyInMHz());
+            break; 
           }
           // Exit 
           case 6:
