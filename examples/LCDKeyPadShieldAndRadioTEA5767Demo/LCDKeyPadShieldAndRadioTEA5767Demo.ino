@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include <LiquidCrystal.h>  // Insira as chaves menor no inicio e maior no final de LiquidCrystal.h
+#include <LiquidCrystal.h>
 #include <TEA5767N.h>
 #include <Wire.h>
 #include <stdlib.h>
@@ -23,13 +23,13 @@
 
 // Init radio object
 TEA5767N radio = TEA5767N();
-// Seleciona os pinos utilizados no Painel
+// Init LCD display object
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7); 
 
-// Define as variaveis de botoes
+// LCD key that was pressed
 int lcd_key = 0;
-int adc_key_in = 0;
 
+// Buttons codes
 #define btnRIGHT    0
 #define btnUP       1
 #define btnDOWN     2
@@ -37,28 +37,28 @@ int adc_key_in = 0;
 #define btnSELECT   4
 #define btnNONE     5
 
+// Delay between clock transitions
 #define DELAY_VOLUME_TRANSITION 50
 
+// Definition of the 3-dimension array
 #define MENU_DEPTH 3
 #define MENU_LINES 8
 #define MENU_TEXT  16
 
+// Arduino pins
 int backLightPin = 10;
 int upDownPin = 11;
 int incPin = 12;
 
+// Predefined stations array
 float default_stations[16] = {88.1, 89.1, 89.7, 91.3, 92.5, 93.7, 94.7, 95.3, 96.1, 98.5, 100.1, 100.9, 101.7, 102.1, 102.9, 103.3};
+// Initialized station arrays
 float stations[16] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+// Keep the current station index
 byte stationIndex = 0;
 
-byte state = 0;       //0 - 
-                      //1 - 
-                      //2 - 
-                      //3 - 
-                      //4 - 
-                      //5 - 
-                      //6 -
-                      //7 - 
+byte applicationState = 0;
+
 byte selectedMenuItem = 0;
 float selectedStation;
 boolean isStandByOn = false;
@@ -82,7 +82,7 @@ void loadDefaultStations() {
 }
 
 int read_LCD_buttons(){
-  adc_key_in = analogRead(0);
+  int adc_key_in = analogRead(0);
   if (adc_key_in > 1000) return btnNONE; 
   if (adc_key_in < 50) return btnRIGHT; 
   if (adc_key_in < 195) return btnUP; 
@@ -278,13 +278,10 @@ void updateLevelIndicator() {
 void loop(){
   lcd_key = read_LCD_buttons();
   
-  //Serial.print("Selected button: ");
-  //Serial.println(lcd_key);
-  
   //Any button turns the radio on again
   if ((lcd_key != btnNONE) && isStandByOn && wasReleased) {
     wasReleased = false;
-    state = 0;
+    applicationState = 0;
     isStandByOn = false;
     
     //Necessary to elliminate noise while turning the radio back on
@@ -301,16 +298,13 @@ void loop(){
     
     // Starts station
     printSelectedFrequency(radio.readFrequencyInMHz());
-    //Serial.println("Consuming button click event");
-    ////Consumes button click event to force to another valid choice
-    //lcd_key = btnNONE;
   }
   
   switch (lcd_key) {
     case btnRIGHT: {
       if (wasReleased) {
         wasReleased = false;
-        switch (state) {
+        switch (applicationState) {
           case 0: {
             Serial.println(stationIndex);
             Serial.println(stations[stationIndex]);
@@ -368,7 +362,7 @@ void loop(){
     case btnLEFT: {
       if (wasReleased) {
         wasReleased = false;
-        switch (state) {
+        switch (applicationState) {
           case 0: {
             Serial.println(stationIndex);
             if (stationIndex > 0) {
@@ -426,9 +420,9 @@ void loop(){
     case btnUP: {
       //For up and down volume it´s ok let it execute
       //continuously
-      if (wasReleased || (state == 0)) {
+      if (wasReleased || (applicationState == 0)) {
         wasReleased = false;
-        switch (state) {
+        switch (applicationState) {
           //Volume UP
           case 0: {
             digitalWrite(upDownPin, HIGH);
@@ -491,9 +485,9 @@ void loop(){
     case btnDOWN: {
       //For up and down volume it´s ok let it execute
       //continuously
-      if (wasReleased || (state == 0)) {
+      if (wasReleased || (applicationState == 0)) {
         wasReleased = false;
-        switch (state) {
+        switch (applicationState) {
           //Volume DOWN
           case 0: {
             digitalWrite(upDownPin, LOW);
@@ -553,12 +547,12 @@ void loop(){
     case btnSELECT: {
       if (wasReleased) {
         wasReleased = false;
-        switch (state) {
+        switch (applicationState) {
           // Show SELECT menu items
           // >Mute
           //  Search
           case 0: {
-            state = 1;
+            applicationState = 1;
             lcd.clear();
             lcd.setCursor(0,0);
             lcd.print(menu[0][0]);
@@ -573,7 +567,7 @@ void loop(){
             switch(selectedMenuItem) {
               //Mute function
               case 0: {
-                state = 0;
+                applicationState = 0;
                 if (!mute) {
                   mute = true;
                   radio.mute();
@@ -594,7 +588,7 @@ void loop(){
               }
               //Search
               case 1: {
-                state = 5;
+                applicationState = 5;
                 lcd.clear();
                 lcd.setCursor(0, 0);
                 lcd.print("<");
@@ -605,7 +599,7 @@ void loop(){
               }
               //Fine search
               case 2: {
-                state = 6;
+                applicationState = 6;
                 lcd.clear();
                 lcd.setCursor(0, 0);
                 lcd.print("<<");
@@ -619,7 +613,7 @@ void loop(){
               case 3: {
                 byte isBandLimitReached = 0;
                 byte progress = 0;
-                state = 0;
+                applicationState = 0;
                 lcd.clear();
                 radio.mute();
                 radio.selectFrequency(88.0);
@@ -647,7 +641,7 @@ void loop(){
               }
               //Configuration
               case 4: {
-                state = 3;
+                applicationState = 3;
                 lcd.clear();
                 lcd.setCursor(0,0);
                 lcd.print(menu[1][0]);
@@ -660,7 +654,7 @@ void loop(){
               //Puts the radio in standy by mode and turns off
               //the display backlight
               case 5: {
-                state = 2;
+                applicationState = 2;
                 lcd.clear();
                 
                 radio.setStandByOn();
@@ -671,7 +665,7 @@ void loop(){
               }
               //Load default station
               case 6: {
-                state = 0;
+                applicationState = 0;
                 
                 lcd.setCursor(0,0);
                 lcd.print("      MHz        ");
@@ -691,7 +685,7 @@ void loop(){
               }
               //Exit
               case 7: {
-                state = 0;
+                applicationState = 0;
                 
                 lcd.setCursor(0,0);
                 lcd.print("      MHz        ");
@@ -710,7 +704,7 @@ void loop(){
             switch(selectedMenuItem) {
               // Level item selected
               case 0: {
-                state = 4;
+                applicationState = 4;
                 lcd.clear();
                 if (searchLevel < 3) {
                   lcd.setCursor(0,0);
@@ -733,7 +727,7 @@ void loop(){
               }
               // Backlight intensity selected
               case 1: {
-                state = 7;
+                applicationState = 7;
             
                 lcd.clear();
                 lcd.setCursor(0,0);
@@ -742,7 +736,7 @@ void loop(){
               }
               // Exit
               case 2: {
-                state = 0;
+                applicationState = 0;
             
                 lcd.setCursor(0,0);
                 lcd.print("      MHz        ");
@@ -758,7 +752,7 @@ void loop(){
           }
           // One of the levels selected
           case 4: {
-            state = 0;
+            applicationState = 0;
             switch(selectedMenuItem+1) {
               case LOW_STOP_LEVEL: {
                 radio.setSearchLowStopLevel();
@@ -787,7 +781,7 @@ void loop(){
             break; 
           }
           case 5: {
-            state = 0;
+            applicationState = 0;
             
             lcd.setCursor(0,0);
             lcd.print("      MHz        ");
@@ -801,7 +795,7 @@ void loop(){
           // Exit 
           case 6:
           case 7: {
-            state = 0;
+            applicationState = 0;
             
             lcd.clear();
             lcd.setCursor(0,0);
@@ -822,7 +816,7 @@ void loop(){
       if (!wasReleased) {
         wasReleased = true;
       }
-      switch (state) {
+      switch (applicationState) {
         case 0: {
           if (!isStandByOn) {
             printStereoStatus();
