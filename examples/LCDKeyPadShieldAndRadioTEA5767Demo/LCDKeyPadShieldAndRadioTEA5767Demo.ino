@@ -19,7 +19,6 @@
 #include <Wire.h>
 #include <stdlib.h>
 #include <EEPROM.h>
-#include <Serial.h>
 
 // Init radio object
 TEA5767N radio = TEA5767N();
@@ -51,7 +50,7 @@ int upDownPin = 11;
 int incPin = 12;
 
 // Predefined stations array
-float default_stations[16] = {88.1, 89.1, 89.7, 91.3, 92.5, 93.7, 94.7, 95.3, 96.1, 98.5, 100.1, 100.9, 101.7, 102.1, 102.9, 103.3};
+float defaultStations[16] = {88.1, 89.1, 89.7, 91.3, 92.5, 93.7, 94.7, 95.3, 96.1, 98.5, 100.1, 100.9, 101.7, 102.1, 102.9, 103.3};
 // Initialized station arrays
 float stations[16] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 // Keep the current station index
@@ -77,7 +76,7 @@ byte backlightIntensity;
 void loadDefaultStations() {
   for (int i=0 ; i < 16 ; i++) {
      //TODO Do this using pointers
-     stations[i] = default_stations[i];
+     stations[i] = defaultStations[i];
   }
 }
 
@@ -812,7 +811,6 @@ void loop(){
       break;
     }
     case btnNONE: {
-      //Serial.println("Btn None");
       if (!wasReleased) {
         wasReleased = true;
       }
