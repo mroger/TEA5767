@@ -62,7 +62,6 @@ byte selectedMenuItem = 0;
 float selectedStation;
 boolean isStandByOn = false;
 boolean wasReleased = true;
-boolean mute = false;
 
 char menu[MENU_DEPTH][MENU_LINES][MENU_TEXT] = {
                        {{" Mute"}, {" Search"}, {" Fine search"}, {" Register statn"}, {" Configuration"}, {" Stand by"}, {" Load deflt stn"}, {" Exit"}},
@@ -235,7 +234,7 @@ void printSelectedFrequency(float frequency, byte col, byte row) {
 
 void printMuteStatus() {
   lcd.setCursor(12, 0);
-  if (mute) {
+  if (radio.isMuted()) {
     lcd.print("M");
   } else {
     lcd.print(" ");
@@ -567,11 +566,9 @@ void loop(){
               //Mute function
               case 0: {
                 applicationState = 0;
-                if (!mute) {
-                  mute = true;
+                if (!radio.isMuted()) {
                   radio.mute();
                 } else {
-                  mute = false;
                   radio.turnTheSoundBackOn();
                 }
                 
