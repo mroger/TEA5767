@@ -304,16 +304,11 @@ void loop(){
         wasReleased = false;
         switch (applicationState) {
           case 0: {
-            Serial.println(stationIndex);
-            Serial.println(stations[stationIndex]);
-            Serial.println(stations[stationIndex+1]);
             if ((stationIndex < 15) && (stations[stationIndex+1] != 0.0)) {
               stationIndex++;
             } else {
               stationIndex = 0;
             }
-            Serial.println(stationIndex);
-            Serial.println(stations[stationIndex]);
             radio.mute();
             radio.selectFrequency(stations[stationIndex]);
             radio.turnTheSoundBackOn();
@@ -362,7 +357,6 @@ void loop(){
         wasReleased = false;
         switch (applicationState) {
           case 0: {
-            Serial.println(stationIndex);
             if (stationIndex > 0) {
               stationIndex--;
             } else {
@@ -371,7 +365,6 @@ void loop(){
                 stationIndex--;
               }
             }
-            Serial.println(stationIndex);
             radio.mute();
             radio.selectFrequency(stations[stationIndex]);
             radio.turnTheSoundBackOn();
