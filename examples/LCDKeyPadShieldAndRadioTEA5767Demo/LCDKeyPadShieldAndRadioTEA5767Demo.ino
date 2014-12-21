@@ -282,7 +282,7 @@ void loop(){
     applicationState = 0;
     isStandByOn = false;
     
-    //Necessary to elliminate noise while turning the radio back on
+    //Necessary to eliminate noise while turning the radio back on
     radio.mute();
     radio.setStandByOff();
     //Necessary to elliminate noise while turning the radio back on
@@ -669,10 +669,9 @@ void loop(){
                 lcd.print("                 ");
                 
                 loadDefaultStations();
-                stationIndex = 0;
                 
                 radio.mute();
-                radio.selectFrequency(stations[stationIndex]);
+                radio.selectFrequency(stations[0]);
                 radio.turnTheSoundBackOn();
                 
                 printSelectedFrequency(radio.readFrequencyInMHz());
@@ -687,6 +686,7 @@ void loop(){
                 lcd.print("      MHz        ");
                 lcd.setCursor(0,1);
                 lcd.print("                 ");
+                printMuteStatus();
                 
                 // Starts station
                 printSelectedFrequency(radio.readFrequencyInMHz());
@@ -738,6 +738,7 @@ void loop(){
                 lcd.print("      MHz        ");
                 lcd.setCursor(0,1);
                 lcd.print("                 ");
+                printMuteStatus();
                 
                 // Starts station
                 printSelectedFrequency(radio.readFrequencyInMHz());
@@ -771,6 +772,7 @@ void loop(){
             lcd.print("      MHz        ");
             lcd.setCursor(0,1);
             lcd.print("                 ");
+            printMuteStatus();
             
             // Starts station
             printSelectedFrequency(radio.readFrequencyInMHz());
@@ -783,6 +785,7 @@ void loop(){
             lcd.print("      MHz        ");
             lcd.setCursor(0,1);
             lcd.print("                 ");
+            printMuteStatus();
             
             // Starts station
             printSelectedFrequency(radio.readFrequencyInMHz());
@@ -798,6 +801,7 @@ void loop(){
             lcd.print("      MHz        ");
             lcd.setCursor(0,1);
             lcd.print("                 ");
+            printMuteStatus();
             
             // Starts station
             printSelectedFrequency(radio.readFrequencyInMHz());
