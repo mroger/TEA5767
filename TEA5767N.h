@@ -75,6 +75,7 @@ class TEA5767N {
 	  byte frequencyL;
 	  byte transmission_data[5];
 	  byte reception_data[5];
+	  boolean muted;
 		
 	  void setFrequency(float);
 	  void transmitFrequency(float);
@@ -130,6 +131,7 @@ class TEA5767N {
 	  byte isStereo();
 	  byte isSearchUp();
 	  byte isSearchDown();
+	  boolean isMuted();
 	  
 };
 
