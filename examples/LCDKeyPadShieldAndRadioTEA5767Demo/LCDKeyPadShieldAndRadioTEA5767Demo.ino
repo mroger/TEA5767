@@ -610,7 +610,11 @@ void loop(){
                 byte isBandLimitReached = 0;
                 byte progress = 0;
                 applicationState = 0;
+                
                 lcd.clear();
+                lcd.setCursor(0,0);
+                lcd.print("Searching ...");
+                
                 radio.mute();
                 radio.selectFrequency(88.0);
                 radio.setSearchUp();
