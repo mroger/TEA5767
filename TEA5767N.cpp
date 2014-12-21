@@ -21,6 +21,7 @@
 TEA5767N::TEA5767N() {
   Wire.begin();
   initializeTransmissionData();
+  muted = false;
 }
 
 void TEA5767N::initializeTransmissionData() {
@@ -95,6 +96,7 @@ void TEA5767N::transmitData() {
 }
 
 void TEA5767N::mute() {
+	muted = true;
 	setSoundOff();
 	transmitData();
 }
@@ -104,12 +106,17 @@ void TEA5767N::setSoundOff() {
 }
 
 void TEA5767N::turnTheSoundBackOn() {
+	muted = false;
 	setSoundOn();
 	transmitData();
 }
 
 void TEA5767N::setSoundOn() {
 	transmission_data[FIRST_DATA] &= 0b01111111;
+}
+
+boolean TEA5767N::isMuted() {
+	return muted;
 }
 
 void TEA5767N::transmitFrequency(float frequency) {
