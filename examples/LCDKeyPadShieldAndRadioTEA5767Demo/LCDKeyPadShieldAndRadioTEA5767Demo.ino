@@ -61,7 +61,7 @@ byte applicationState = 0;
 byte selectedMenuItem = 0;
 float selectedStation;
 boolean isStandByOn = false;
-boolean wasReleased = true;
+boolean buttonWasReleased = true;
 
 char menu[MENU_DEPTH][MENU_LINES][MENU_TEXT] = {
                        {{" Mute"}, {" Search"}, {" Fine search"}, {" Register statn"}, {" Configuration"}, {" Stand by"}, {" Load deflt stn"}, {" Exit"}},
@@ -277,8 +277,8 @@ void loop(){
   lcd_key = read_LCD_buttons();
   
   //Any button turns the radio on again
-  if ((lcd_key != btnNONE) && isStandByOn && wasReleased) {
-    wasReleased = false;
+  if ((lcd_key != btnNONE) && isStandByOn && buttonWasReleased) {
+    buttonWasReleased = false;
     applicationState = 0;
     isStandByOn = false;
     
@@ -300,8 +300,8 @@ void loop(){
   
   switch (lcd_key) {
     case btnRIGHT: {
-      if (wasReleased) {
-        wasReleased = false;
+      if (buttonWasReleased) {
+        buttonWasReleased = false;
         switch (applicationState) {
           case 0: {
             if ((stationIndex < 15) && (stations[stationIndex+1] != 0.0)) {
@@ -353,8 +353,8 @@ void loop(){
       break;
     }
     case btnLEFT: {
-      if (wasReleased) {
-        wasReleased = false;
+      if (buttonWasReleased) {
+        buttonWasReleased = false;
         switch (applicationState) {
           case 0: {
             if (stationIndex > 0) {
@@ -411,8 +411,8 @@ void loop(){
     case btnUP: {
       //For up and down volume it´s ok let it execute
       //continuously
-      if (wasReleased || (applicationState == 0)) {
-        wasReleased = false;
+      if (buttonWasReleased || (applicationState == 0)) {
+        buttonWasReleased = false;
         switch (applicationState) {
           //Volume UP
           case 0: {
@@ -476,8 +476,8 @@ void loop(){
     case btnDOWN: {
       //For up and down volume it´s ok let it execute
       //continuously
-      if (wasReleased || (applicationState == 0)) {
-        wasReleased = false;
+      if (buttonWasReleased || (applicationState == 0)) {
+        buttonWasReleased = false;
         switch (applicationState) {
           //Volume DOWN
           case 0: {
@@ -536,8 +536,8 @@ void loop(){
       break;
     }
     case btnSELECT: {
-      if (wasReleased) {
-        wasReleased = false;
+      if (buttonWasReleased) {
+        buttonWasReleased = false;
         switch (applicationState) {
           // Show SELECT menu items
           // >Mute
@@ -809,8 +809,8 @@ void loop(){
       break;
     }
     case btnNONE: {
-      if (!wasReleased) {
-        wasReleased = true;
+      if (!buttonWasReleased) {
+        buttonWasReleased = true;
       }
       switch (applicationState) {
         case 0: {
