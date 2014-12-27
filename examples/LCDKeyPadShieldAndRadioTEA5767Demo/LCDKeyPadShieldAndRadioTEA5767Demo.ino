@@ -23,10 +23,8 @@
 // Init radio object
 TEA5767N radio = TEA5767N();
 // Init LCD display object
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7); 
-
-// LCD key that was pressed
-int lcd_key = 0;
+// LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
 // Buttons codes
 #define btnRIGHT    0
@@ -62,6 +60,9 @@ byte selectedMenuItem = 0;
 float selectedStation;
 boolean isStandByOn = false;
 boolean buttonWasReleased = true;
+
+// LCD key that was pressed
+int lcd_key = 0;
 
 char menu[MENU_DEPTH][MENU_LINES][MENU_TEXT] = {
                        {{" Mute"}, {" Search"}, {" Fine search"}, {" Register statn"}, {" Configuration"}, {" Stand by"}, {" Load deflt stn"}, {" Exit"}},
