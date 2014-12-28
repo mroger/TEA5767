@@ -74,7 +74,7 @@ char menu[MENU_DEPTH][MENU_LINES][MENU_TEXT] = {
   };
 
 byte searchLevel;
-byte backlightIntensity;
+int backlightIntensity;
 
 void loadDefaultStations() {
   for (int i=0 ; i < 16 ; i++) {
@@ -143,7 +143,7 @@ void loadSearchLevel() {
 
 void loadBacklightIntensity() {
   backlightIntensity = EEPROM.read(3);
-  analogWrite(BACKLIGHT_PIN, backlightIntensity);
+  analogWrite(BACKLIGHT_PIN, (byte) backlightIntensity);
 }
 
 void setupVolume() {
@@ -291,7 +291,7 @@ void loop(){
     //Necessary to elliminate noise while turning the radio back on
     delay(150);
     radio.turnTheSoundBackOn();
-    analogWrite(BACKLIGHT_PIN, backlightIntensity);
+    analogWrite(BACKLIGHT_PIN, (byte) backlightIntensity);
     
     lcd.clear();
     lcd.setCursor(0,0);
@@ -344,11 +344,12 @@ void loop(){
           }
           // Increment backlight intensity
           case 7: {
-            if ((backlightIntensity + 10) <= 255) {
-              backlightIntensity += 10;
-              analogWrite(BACKLIGHT_PIN, backlightIntensity);
-              EEPROM.write(3, backlightIntensity);
+            backlightIntensity += 10;
+            if (backlightIntensity > 255) {
+              backlightIntensity = 255;
             }
+            analogWrite(BACKLIGHT_PIN, (byte) backlightIntensity);
+            EEPROM.write(3, (byte) backlightIntensity);
             break;
           }
         }
@@ -400,11 +401,12 @@ void loop(){
           }
           // Decrement backlight intensity
           case 7: {
-            if ((backlightIntensity - 10) >= 20) {
-              backlightIntensity -= 10;
-              analogWrite(BACKLIGHT_PIN, backlightIntensity);
-              EEPROM.write(3, backlightIntensity);
+            backlightIntensity -= 10;
+            if (backlightIntensity < 0) {
+              backlightIntensity = 0;
             }
+            analogWrite(BACKLIGHT_PIN, (byte) backlightIntensity);
+            EEPROM.write(3, (byte) backlightIntensity);
             break;
           }
         }
