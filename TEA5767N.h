@@ -132,6 +132,7 @@ class TEA5767N {
 	  byte isSearchUp();
 	  byte isSearchDown();
 	  boolean isMuted();
+	  boolean isStandBy();
 	  
 };
 

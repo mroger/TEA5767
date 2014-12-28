@@ -304,6 +304,11 @@ byte TEA5767N::isSearchDown() {
 	return (transmission_data[THIRD_DATA] & 0b10000000) == 0;
 }
 
+boolean TEA5767N::isStandBy() {
+	readStatus();
+	return (transmission_data[FOURTH_DATA] & 0b01000000) != 0;
+}
+
 void TEA5767N::setStereoReception() {
 	transmission_data[THIRD_DATA] &= 0b11110111;
 	transmitData();
