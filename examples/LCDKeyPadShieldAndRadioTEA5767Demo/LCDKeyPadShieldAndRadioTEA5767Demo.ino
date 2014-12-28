@@ -62,7 +62,6 @@ byte applicationState = 0;
 // Index of the menu item current selected
 byte selectedMenuItem = 0;
 float selectedStation;
-boolean isStandByOn = false;
 boolean buttonWasReleased = true;
 
 // LCD key that was pressed
@@ -282,10 +281,9 @@ void loop(){
   lcd_key = read_LCD_buttons();
   
   //Any button turns the radio on again
-  if ((lcd_key != btnNONE) && isStandByOn && buttonWasReleased) {
+  if ((lcd_key != btnNONE) && radio.isStandBy() && buttonWasReleased) {
     buttonWasReleased = false;
     applicationState = 0;
-    isStandByOn = false;
     
     //Necessary to eliminate noise while turning the radio back on
     radio.mute();
@@ -658,7 +656,6 @@ void loop(){
                 radio.setStandByOn();
                 analogWrite(BACKLIGHT_PIN, 0);
                 
-                isStandByOn = true;
                 break; 
               }
               //Load default station
@@ -819,7 +816,7 @@ void loop(){
       }
       switch (applicationState) {
         case 0: {
-          if (!isStandByOn) {
+          if (!radio.isStandBy()) {
             printStereoStatus();
           }
           updateLevelIndicator();
