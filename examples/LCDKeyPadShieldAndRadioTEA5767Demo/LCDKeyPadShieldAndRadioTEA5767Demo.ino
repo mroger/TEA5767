@@ -42,10 +42,13 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 #define MENU_LINES 8
 #define MENU_TEXT  16
 
-// Arduino pins
-int backLightPin = 10;
-int upDownPin = 11;
-int incPin = 12;
+// Arduino pin for backlight intensity control
+#define BACKLIGHT_PIN 10
+
+// Arduino pins connected to digital potentiometers
+// for volume control
+#define UPDOWN_PIN    11
+#define INC_PIN       12
 
 // Predefined stations array
 float defaultStations[16] = {88.1, 89.1, 89.7, 91.3, 92.5, 93.7, 94.7, 95.3, 96.1, 98.5, 100.1, 100.9, 101.7, 102.1, 102.9, 103.3};
@@ -53,9 +56,10 @@ float defaultStations[16] = {88.1, 89.1, 89.7, 91.3, 92.5, 93.7, 94.7, 95.3, 96.
 float stations[16] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 // Keep the current station index
 byte stationIndex = 0;
-
+// Keep the application state where the execution
+// is trapped so a specific set of menu items is shown to the user
 byte applicationState = 0;
-
+// Index of the menu item current selected
 byte selectedMenuItem = 0;
 float selectedStation;
 boolean isStandByOn = false;
@@ -65,10 +69,10 @@ boolean buttonWasReleased = true;
 int lcd_key = 0;
 
 char menu[MENU_DEPTH][MENU_LINES][MENU_TEXT] = {
-                       {{" Mute"}, {" Search"}, {" Fine search"}, {" Register statn"}, {" Configuration"}, {" Stand by"}, {" Load deflt stn"}, {" Exit"}},
-                       {{" Search level"}, {" Backlit inten."}, {" Exit"}},
-                       {{" Low"}, {" Medium"}, {" High"}, {"Exit"}}
-                      };
+   {{" Mute"}, {" Search"}, {" Fine search"}, {" Register statn"}, {" Configuration"}, {" Stand by"}, {" Load deflt stn"}, {" Exit"}},
+   {{" Search level"}, {" Backlit inten."}, {" Exit"}},
+   {{" Low"}, {" Medium"}, {" High"}, {"Exit"}}
+  };
 
 byte searchLevel;
 byte backlightIntensity;
@@ -80,7 +84,7 @@ void loadDefaultStations() {
   }
 }
 
-int read_LCD_buttons(){
+int read_LCD_buttons() {
   int adc_key_in = analogRead(0);
   if (adc_key_in > 1000) return btnNONE; 
   if (adc_key_in < 50) return btnRIGHT; 
@@ -140,24 +144,24 @@ void loadSearchLevel() {
 
 void loadBacklightIntensity() {
   backlightIntensity = EEPROM.read(3);
-  analogWrite(backLightPin, backlightIntensity);
+  analogWrite(BACKLIGHT_PIN, backlightIntensity);
 }
 
 void setupVolume() {
   // Lowest volume
-  digitalWrite(upDownPin, LOW);
+  digitalWrite(UPDOWN_PIN, LOW);
   for (int i = 0 ; i < 100 ; i++) {
-    digitalWrite(incPin, LOW);
+    digitalWrite(INC_PIN, LOW);
     delay(1);
-    digitalWrite(incPin, HIGH);
+    digitalWrite(INC_PIN, HIGH);
     delay(1);
   }
   // Pleasant level
-  digitalWrite(upDownPin, HIGH);
+  digitalWrite(UPDOWN_PIN, HIGH);
   for (int i = 0 ; i < 15 ; i++) {
-    digitalWrite(incPin, LOW);
+    digitalWrite(INC_PIN, LOW);
     delay(1);
-    digitalWrite(incPin, HIGH);
+    digitalWrite(INC_PIN, HIGH);
     delay(1);
   }
 }
@@ -198,13 +202,13 @@ void saveSearchLevel(byte searchLevel) {
 }
 
 void setup(){
-  pinMode(backLightPin, OUTPUT);  
-  pinMode(upDownPin, OUTPUT);
-  pinMode(incPin, OUTPUT);
+  pinMode(BACKLIGHT_PIN, OUTPUT);  
+  pinMode(UPDOWN_PIN, OUTPUT);
+  pinMode(INC_PIN, OUTPUT);
   
-  digitalWrite(upDownPin, HIGH);
-  digitalWrite(incPin, HIGH);
-  analogWrite(backLightPin, 255);
+  digitalWrite(UPDOWN_PIN, HIGH);
+  digitalWrite(INC_PIN, HIGH);
+  analogWrite(BACKLIGHT_PIN, 255);
   
   lcd.begin(16, 2); 
   lcd.setCursor(6,0);
@@ -289,7 +293,7 @@ void loop(){
     //Necessary to elliminate noise while turning the radio back on
     delay(150);
     radio.turnTheSoundBackOn();
-    analogWrite(backLightPin, backlightIntensity);
+    analogWrite(BACKLIGHT_PIN, backlightIntensity);
     
     lcd.clear();
     lcd.setCursor(0,0);
@@ -344,7 +348,7 @@ void loop(){
           case 7: {
             if ((backlightIntensity + 10) <= 255) {
               backlightIntensity += 10;
-              analogWrite(backLightPin, backlightIntensity);
+              analogWrite(BACKLIGHT_PIN, backlightIntensity);
               EEPROM.write(3, backlightIntensity);
             }
             break;
@@ -400,7 +404,7 @@ void loop(){
           case 7: {
             if ((backlightIntensity - 10) >= 20) {
               backlightIntensity -= 10;
-              analogWrite(backLightPin, backlightIntensity);
+              analogWrite(BACKLIGHT_PIN, backlightIntensity);
               EEPROM.write(3, backlightIntensity);
             }
             break;
@@ -417,10 +421,10 @@ void loop(){
         switch (applicationState) {
           //Volume UP
           case 0: {
-            digitalWrite(upDownPin, HIGH);
-            digitalWrite(incPin, LOW);
+            digitalWrite(UPDOWN_PIN, HIGH);
+            digitalWrite(INC_PIN, LOW);
             delay(DELAY_VOLUME_TRANSITION);
-            digitalWrite(incPin, HIGH);
+            digitalWrite(INC_PIN, HIGH);
             delay(DELAY_VOLUME_TRANSITION);
             break;
           }
@@ -482,10 +486,10 @@ void loop(){
         switch (applicationState) {
           //Volume DOWN
           case 0: {
-            digitalWrite(upDownPin, LOW);
-            digitalWrite(incPin, LOW);
+            digitalWrite(UPDOWN_PIN, LOW);
+            digitalWrite(INC_PIN, LOW);
             delay(DELAY_VOLUME_TRANSITION);
-            digitalWrite(incPin, HIGH);
+            digitalWrite(INC_PIN, HIGH);
             delay(DELAY_VOLUME_TRANSITION);
             break;
           }
@@ -652,7 +656,7 @@ void loop(){
                 lcd.clear();
                 
                 radio.setStandByOn();
-                analogWrite(backLightPin, 0);
+                analogWrite(BACKLIGHT_PIN, 0);
                 
                 isStandByOn = true;
                 break; 
