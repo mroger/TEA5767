@@ -59,30 +59,41 @@ byte stationIndex = 0;
 // Keep the application state where the execution
 // is trapped so a specific set of menu items is shown to the user
 byte applicationState = 0;
-// Index of the menu item current selected
+// Index of the menu item currently selected
 byte selectedMenuItem = 0;
+// Used for fine search commands
 float selectedStation;
+// This variable helps to keep track of the buttons state:
+// the command for a pressed button is only accepted if 
+// previously it was in  not pressed state
 boolean buttonWasReleased = true;
 
 // LCD key that was pressed
 int lcd_key = 0;
 
+// Menu labels
 char menu[MENU_DEPTH][MENU_LINES][MENU_TEXT] = {
    {{" Mute"}, {" Search"}, {" Fine search"}, {" Register statn"}, {" Configuration"}, {" Stand by"}, {" Load deflt stn"}, {" Exit"}},
    {{" Search level"}, {" Backlit inten."}, {" Exit"}},
    {{" Low"}, {" Medium"}, {" High"}, {"Exit"}}
   };
 
+// Level required to search
 byte searchLevel;
+// Intensity of LCD backlight.
+// Varies from 0 to 255
 int backlightIntensity;
 
+// Copy the predefined stations into the
+// array used by the application
 void loadDefaultStations() {
   for (int i=0 ; i < 16 ; i++) {
-     //TODO Do this using pointers
      stations[i] = defaultStations[i];
   }
 }
 
+// Convert the analog values read from Arduino pin A0
+// into one of the five commands plus the NONE button 
 int read_LCD_buttons() {
   int adc_key_in = analogRead(0);
   if (adc_key_in > 1000) return btnNONE; 
@@ -94,6 +105,8 @@ int read_LCD_buttons() {
   return btnNONE;
 }
 
+// Given a station (e.g. 102.1), returns its index
+// in the array
 byte findSelectedStationIndex(float station) {
   for (int i = 0 ; i < 16 ; i++) {
     if (stations[i] == station) {
@@ -103,6 +116,7 @@ byte findSelectedStationIndex(float station) {
   return 0;
 }
 
+// Load the station stored in the EEPROM static memory
 void loadStation() {
   byte intStation, floatStation;
   float station;
@@ -120,6 +134,7 @@ void loadStation() {
   }
 }
 
+// Load the search level stored in the EEPROM static memory
 void loadSearchLevel() {
   searchLevel = EEPROM.read(2);
   if (searchLevel == 0xFF) {
@@ -141,11 +156,15 @@ void loadSearchLevel() {
   }
 }
 
+// Load the backlight intensity stored in the EEPROM static memory
 void loadBacklightIntensity() {
   backlightIntensity = EEPROM.read(3);
   analogWrite(BACKLIGHT_PIN, (byte) backlightIntensity);
 }
 
+// Interacts directly with the digital potentiometer
+// to control the volume. Firstly puts the volume to a minimum
+// and then raises it to a pleasant level (both channels)
 void setupVolume() {
   // Lowest volume
   digitalWrite(UPDOWN_PIN, LOW);
@@ -165,6 +184,9 @@ void setupVolume() {
   }
 }
 
+// This is a facade for all configurations that must
+// be loaded on startup. Starts muting the radio to
+// avoid all the annoying noise
 void loadConfiguration() {
   radio.mute();
   loadDefaultStations();
@@ -175,6 +197,8 @@ void loadConfiguration() {
   radio.turnTheSoundBackOn();
 }
 
+// Saves the station passed as parameter in the EEPROM
+// The station is stored in two parts
 void saveStation(float station) {
   float aux;
   byte byteValue;
@@ -196,10 +220,16 @@ void saveStation(float station) {
   EEPROM.write(1, byteValue);
 }
 
+// Saves the search level in the EEPROM
 void saveSearchLevel(byte searchLevel) {
   EEPROM.write(2, searchLevel);
 }
 
+// Does all the initialization of the application
+// - Confiration of the pins
+// - Initialization of the LCD
+// - Load of the configuration
+// - Smoothing of the radio noise
 void setup(){
   pinMode(BACKLIGHT_PIN, OUTPUT);  
   pinMode(UPDOWN_PIN, OUTPUT);
@@ -277,10 +307,12 @@ void updateLevelIndicator() {
   lcd.print(barGraph);
 }
 
-void loop(){
+void loop() {
+  // Keeps looking for new commands from LCD buttons
   lcd_key = read_LCD_buttons();
   
-  //Any button turns the radio on again
+  //Any button turns the radio on again, after it's released
+  //to avoid spurious commands.
   if ((lcd_key != btnNONE) && radio.isStandBy() && buttonWasReleased) {
     buttonWasReleased = false;
     applicationState = 0;
@@ -301,26 +333,36 @@ void loop(){
     printSelectedFrequency(radio.readFrequencyInMHz());
   }
   
+  //Interprets user commands using button code and the current
+  //application state in the moment the button was pressed and released
   switch (lcd_key) {
+    // Right button was pressed
     case btnRIGHT: {
+      // If the button was released...
       if (buttonWasReleased) {
+        // ... now it's pressed
         buttonWasReleased = false;
+        // What is the current application state
         switch (applicationState) {
+          // First screen, so change station
           case 0: {
             if ((stationIndex < 15) && (stations[stationIndex+1] != 0.0)) {
               stationIndex++;
             } else {
               stationIndex = 0;
             }
+            // Use the library to select the station
             radio.mute();
             radio.selectFrequency(stations[stationIndex]);
             radio.turnTheSoundBackOn();
+            
             printSelectedFrequency(radio.readFrequencyInMHz());
             saveStation(stations[stationIndex]);
             break;
           }
+          // Search ahead
           case 5: {
-            byte isBandLimitReached;
+            byte isBandLimitReached = false;
             if (selectedMenuItem == 1) {
               radio.setSearchUp();
               isBandLimitReached = radio.searchNextMuting();
@@ -348,6 +390,7 @@ void loop(){
             if (backlightIntensity > 255) {
               backlightIntensity = 255;
             }
+            // Adjusts the level of the backlight intensity
             analogWrite(BACKLIGHT_PIN, (byte) backlightIntensity);
             EEPROM.write(3, (byte) backlightIntensity);
             break;
@@ -356,10 +399,13 @@ void loop(){
       }
       break;
     }
+    // For the left button is pretty much the same logic
+    // as is for the right button 
     case btnLEFT: {
       if (buttonWasReleased) {
         buttonWasReleased = false;
         switch (applicationState) {
+          // First screen, so change station
           case 0: {
             if (stationIndex > 0) {
               stationIndex--;
@@ -376,6 +422,7 @@ void loop(){
             saveStation(stations[stationIndex]);
             break;
           }
+          // Search backwards
           case 5: {
             byte isBandLimitReached;
             if (selectedMenuItem == 1) {
@@ -412,10 +459,10 @@ void loop(){
         }
       }
       break;
-    } 
+    }
     case btnUP: {
-      //For up and down volume it´s ok let it execute
-      //continuously
+      // While turning up and down the volume, 
+      // it's ok let it execute continuously
       if (buttonWasReleased || (applicationState == 0)) {
         buttonWasReleased = false;
         switch (applicationState) {
@@ -428,6 +475,7 @@ void loop(){
             delay(DELAY_VOLUME_TRANSITION);
             break;
           }
+          // Menu navigation up
           case 1: {
             if (selectedMenuItem > 0) {
               selectedMenuItem--;
@@ -443,7 +491,7 @@ void loop(){
             markSelectedMenuItem(">", " ");
             break;
           }
-          // Selecting on of the two menu items: "Search level", "Backlit inten." or "Exit"
+          // Selecting one of the three menu items: "Search level", "Backlit inten." or "Exit"
           case 3: {
             if (selectedMenuItem > 0) {
               selectedMenuItem--;
@@ -459,6 +507,7 @@ void loop(){
             markSelectedMenuItem(">", " ");
             break;
           }
+          // Search level navigation up
           case 4: {
             if (selectedMenuItem > 0) {
               selectedMenuItem--;
@@ -478,6 +527,8 @@ void loop(){
       }
       break;
     }
+    // For the down button is pretty much the same logic
+    // as is for the up button 
     case btnDOWN: {
       //For up and down volume it´s ok let it execute
       //continuously
@@ -493,6 +544,7 @@ void loop(){
             delay(DELAY_VOLUME_TRANSITION);
             break;
           }
+          // Menu navigation down
           case 1: {
             if (selectedMenuItem < (MENU_LINES-1)) {
               selectedMenuItem++;
@@ -508,6 +560,7 @@ void loop(){
             markSelectedMenuItem(" ", ">");
             break;
           }
+          // Selecting one of the three menu items: "Search level", "Backlit inten." or "Exit"
           case 3:
             if (selectedMenuItem < 2) {
               selectedMenuItem++;
@@ -522,6 +575,7 @@ void loop(){
             }
             markSelectedMenuItem(" ", ">");
             break;
+          // Search level navigation down
           case 4: {
             if (selectedMenuItem < 2) {
               selectedMenuItem++;
@@ -540,6 +594,7 @@ void loop(){
       }
       break;
     }
+    // Typically starts the menu or execute a command
     case btnSELECT: {
       if (buttonWasReleased) {
         buttonWasReleased = false;
@@ -603,7 +658,8 @@ void loop(){
                 printSelectedFrequency(selectedStation, 2, 0);
                 break; 
               }
-              //Register station
+              // Register stations
+              // Stores all stations found in the array
               case 3: {
                 byte isBandLimitReached = 0;
                 byte progress = 0;
@@ -650,7 +706,7 @@ void loop(){
                 break;
               }
               //Puts the radio in standy by mode and turns off
-              //the display backlight
+              //the display backlight as a way to save energy
               case 5: {
                 applicationState = 2;
                 lcd.clear();
@@ -699,7 +755,7 @@ void loop(){
           // One of the 3 itens selected: "Search level", "Backlit intensity" or "Exit"
           case 3: {
             switch(selectedMenuItem) {
-              // Level item selected
+              // Search level item selected
               case 0: {
                 applicationState = 4;
                 lcd.clear();
@@ -779,29 +835,16 @@ void loop(){
             printSelectedFrequency(radio.readFrequencyInMHz());
             break; 
           }
-          case 5: {
-            applicationState = 0;
-            
-            lcd.setCursor(0,0);
-            lcd.print("      MHz        ");
-            lcd.setCursor(0,1);
-            lcd.print("                 ");
-            printMuteStatus();
-            
-            // Starts station
-            printSelectedFrequency(radio.readFrequencyInMHz());
-            break; 
-          }
-          // Exit 
-          case 6:
-          case 7: {
+          // Exit
+          // Several states to exit from
+          case 5: // Exit from Search
+          case 6: // Exit from Fine search
+          case 7: { // Exit from Backlight intensity
             applicationState = 0;
             
             lcd.clear();
             lcd.setCursor(0,0);
             lcd.print("      MHz        ");
-            lcd.setCursor(0,1);
-            lcd.print("                 ");
             printMuteStatus();
             
             // Starts station
@@ -812,19 +855,25 @@ void loop(){
       }
       break;
     }
+    // The buttons were scanned and none were pressed
     case btnNONE: {
       if (!buttonWasReleased) {
         buttonWasReleased = true;
       }
+      // Since no button was pressed, takes to update some states
       switch (applicationState) {
         case 0: {
+          // If radio is on...
           if (!radio.isStandBy()) {
+            // ... prints S(Stereo) or M(Mono)
             printStereoStatus();
           }
+          // Updates the bar graph with the signal level read from the radio
           updateLevelIndicator();
           break;
         }
         case 5: {
+          // Updates the bar graph with the signal level read from the radio
           updateLevelIndicator(); 
           break;
         }
@@ -832,5 +881,6 @@ void loop(){
       break;
     }
   }
+  // Let's take a breath... :)
   delay(10);
 }
